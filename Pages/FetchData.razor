@@ -7,29 +7,39 @@
 
 <p>This component demonstrates fetching data from the server.</p>
 
+<h4>Enter City</h4>
+<input type="text" @bind="@ciudad"/>
+<button @onclick="@GetWeatherForecast">Search</button>
+
+
 @if (forecasts == null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
+    var today = DateTime.Today;
+
+    <h4>Region: @forecasts.region</h4>
+
     <table class="table">
         <thead>
             <tr>
                 <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
                 <th>Summary</th>
+                <th>Min C</th>
+                <th>Max C</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var forecast in forecasts)
+            @foreach (var forecast in forecasts.next_days)
             {
                 <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
+                   
+                    <td>@forecast.day</td>
+                    <td>@forecast.comment</td>
+                    <td>@forecast.min_temp.c.ToString()</td>
+                    <td>@forecast.max_temp.c.ToString()</td>
                 </tr>
             }
         </tbody>
@@ -37,21 +47,42 @@ else
 }
 
 @code {
-    private WeatherForecast[]? forecasts;
+    private WeatherForecast? forecasts;
+    private string ciudad = "juarez";
+
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
+        forecasts = await Http.GetFromJsonAsync<WeatherForecast>(ciudad);
     }
 
-    public class WeatherForecast
+    private async Task GetWeatherForecast()
     {
-        public DateTime Date { get; set; }
+        forecasts = await Http.GetFromJsonAsync<WeatherForecast>(ciudad);
+    }
 
-        public int TemperatureC { get; set; }
+    public partial class WeatherForecast:Forecast
+    {
+        public string? region { get; set; }
+        public Forecast[]? next_days{ get; set; }
+    }
 
-        public string? Summary { get; set; }
+    public class Forecast : Temp
+    {
+        public string? day { get; set; }
 
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        public string? comment { get; set; }
+
+        public Temp? max_temp { get; set; }
+        
+        public Temp? min_temp { get; set; }
+
+    }
+
+    public class Temp
+    {
+        public int? c{ get; set; }
+        public int? f { get; set; }
+
     }
 }
